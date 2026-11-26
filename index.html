@@ -1,0 +1,539 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aplikasi Presensi Siswa</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+header {
+    background: #2563eb;
+    color: white;
+    padding: 22px;
+    text-align: center;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 25px auto;
+    padding: 15px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px #00000010;
+}
+
+input, select, button {
+    padding: 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    margin: 5px 0;
+}
+
+input, select {
+    width: 100%;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: .85;
+}
+
+.hapus {
+    background: #dc2626;
+}
+
+.unduh {
+    background: #16a34a;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.stat {
+    padding: 15px;
+    border-radius: 9px;
+    background: #eff6ff;
+    text-align: center;
+}
+
+.stat h2 {
+    color: #2563eb;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    min-width: 600px;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+}
+
+th {
+    background: #eff6ff;
+}
+
+@media(max-width:600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .stats {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>APLIKASI PRESENSI SISWA</h1>
+    <p>Sistem Informasi Kehadiran Siswa</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Dashboard Presensi</h2>
+        <p>Tanggal: <strong id="tanggal"></strong></p>
+
+        <div class="stats">
+            <div class="stat">
+                <h2 id="total">0</h2>
+                <p>Total</p>
+            </div>
+            <div class="stat">
+                <h2 id="hadir">0</h2>
+                <p>Hadir</p>
+            </div>
+            <div class="stat">
+                <h2 id="izin">0</h2>
+                <p>Izin</p>
+            </div>
+            <div class="stat">
+                <h2 id="sakit">0</h2>
+                <p>Sakit</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Tambah Data Siswa</h2>
+
+        <div class="form-grid">
+            <div>
+                <label>Nama Siswa</label>
+                <input type="text" id="nama"
+                placeholder="Masukkan nama siswa">
+            </div>
+
+            <div>
+                <label>Kelas</label>
+                <input type="text" id="kelas"
+                placeholder="Contoh: XI RPL 1">
+            </div>
+        </div>
+
+        <button onclick="tambahSiswa()">
+            + Tambah Siswa
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>Input Presensi</h2>
+
+        <label>Tanggal Presensi</label>
+        <input type="date" id="tanggalPresensi">
+
+        <label>Pilih Siswa</label>
+        <select id="pilihSiswa">
+            <option value="">Pilih siswa</option>
+        </select>
+
+        <label>Status Kehadiran</label>
+        <select id="status">
+            <option value="Hadir">Hadir</option>
+            <option value="Izin">Izin</option>
+            <option value="Sakit">Sakit</option>
+            <option value="Alfa">Alfa</option>
+        </select>
+
+        <button onclick="simpanPresensi()">
+            Simpan Presensi
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>Data Presensi Siswa</h2>
+
+        <label>Filter Tanggal</label>
+        <input type="date" id="filterTanggal"
+        onchange="tampilkanPresensi()">
+
+        <button onclick="resetFilter()">
+            Semua Tanggal
+        </button>
+
+        <button class="unduh" onclick="unduhCSV()">
+            Download Laporan CSV
+        </button>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Kelas</th>
+                        <th>Tanggal</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody id="daftarPresensi">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Data Seluruh Siswa</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Siswa</th>
+                        <th>Kelas</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="daftarSiswa"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+// Mengambil data dari penyimpanan browser
+let siswa = JSON.parse(
+    localStorage.getItem("dataSiswa") || "[]"
+);
+
+let presensi = JSON.parse(
+    localStorage.getItem("dataPresensi") || "[]"
+);
+
+const hariIni = new Date().toLocaleDateString("en-CA");
+
+document.getElementById("tanggal").textContent =
+    new Date().toLocaleDateString("id-ID");
+
+document.getElementById("tanggalPresensi").value =
+    hariIni;
+
+// Simpan data
+function simpanData() {
+    localStorage.setItem(
+        "dataSiswa", JSON.stringify(siswa)
+    );
+
+    localStorage.setItem(
+        "dataPresensi", JSON.stringify(presensi)
+    );
+}
+
+// Tambah siswa
+function tambahSiswa() {
+
+    let nama = document.getElementById("nama").value.trim();
+    let kelas = document.getElementById("kelas").value.trim();
+
+    if (!nama || !kelas) {
+        alert("Nama dan kelas harus diisi!");
+        return;
+    }
+
+    siswa.push({
+        id: Date.now(),
+        nama: nama,
+        kelas: kelas
+    });
+
+    simpanData();
+
+    document.getElementById("nama").value = "";
+    document.getElementById("kelas").value = "";
+
+    tampilkanSiswa();
+}
+
+// Tampilkan pilihan siswa
+function tampilkanPilihan() {
+
+    let pilihan = document.getElementById("pilihSiswa");
+
+    pilihan.innerHTML = '<option value="">Pilih siswa</option>';
+
+    siswa.forEach(s => {
+        pilihan.innerHTML += `
+            <option value="${s.id}">
+                ${escapeHTML(s.nama)} - ${escapeHTML(s.kelas)}
+            </option>
+        `;
+    });
+}
+
+// Simpan presensi
+function simpanPresensi() {
+
+    let id = Number(document.getElementById("pilihSiswa").value);
+    let tanggal = document.getElementById("tanggalPresensi").value;
+    let status = document.getElementById("status").value;
+
+    let dataSiswa = siswa.find(s => s.id === id);
+
+    if (!dataSiswa || !tanggal) {
+        alert("Silakan pilih siswa dan tanggal!");
+        return;
+    }
+
+    let sudahAda = presensi.find(p =>
+        p.idSiswa === id && p.tanggal === tanggal
+    );
+
+    if (sudahAda) {
+        sudahAda.status = status;
+    } else {
+        presensi.push({
+            id: Date.now(),
+            idSiswa: id,
+            tanggal: tanggal,
+            status: status
+        });
+    }
+
+    simpanData();
+    tampilkanPresensi();
+
+    alert("Presensi berhasil disimpan!");
+}
+
+// Mencegah teks input menjadi HTML
+function escapeHTML(teks) {
+    return String(teks).replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[c]);
+}
+
+// Tampilkan siswa
+function tampilkanSiswa() {
+
+    let tabel = document.getElementById("daftarSiswa");
+
+    tabel.innerHTML = "";
+
+    siswa.forEach((s, index) => {
+
+        tabel.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHTML(s.nama)}</td>
+                <td>${escapeHTML(s.kelas)}</td>
+                <td>
+                    <button class="hapus"
+                    onclick="hapusSiswa(${s.id})">
+                        Hapus
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tampilkanPilihan();
+}
+
+// Hapus siswa
+function hapusSiswa(id) {
+
+    if (!confirm("Hapus data siswa ini?")) return;
+
+    siswa = siswa.filter(s => s.id !== id);
+
+    // Hapus juga riwayat presensi siswa tersebut
+    presensi = presensi.filter(p => p.idSiswa !== id);
+
+    simpanData();
+    tampilkanSiswa();
+    tampilkanPresensi();
+}
+
+// Tampilkan presensi
+function tampilkanPresensi() {
+
+    let tabel = document.getElementById("daftarPresensi");
+    let filter = document.getElementById("filterTanggal").value;
+
+    tabel.innerHTML = "";
+
+    let data = presensi.filter(p =>
+        !filter || p.tanggal === filter
+    );
+
+    data.sort((a, b) =>
+        b.tanggal.localeCompare(a.tanggal)
+    );
+
+    data.forEach((p, index) => {
+
+        let s = siswa.find(x => x.id === p.idSiswa);
+        if (!s) return;
+
+        tabel.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHTML(s.nama)}</td>
+                <td>${escapeHTML(s.kelas)}</td>
+                <td>${escapeHTML(p.tanggal)}</td>
+                <td>${escapeHTML(p.status)}</td>
+                <td>
+                    <button class="hapus"
+                    onclick="hapusPresensi(${p.id})">
+                        Hapus
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    // Statistik berdasarkan tanggal yang dipilih
+    let tanggalAktif = filter || hariIni;
+
+    let statistik = presensi.filter(p =>
+        p.tanggal === tanggalAktif
+    );
+
+    document.getElementById("total").textContent =
+        statistik.length;
+
+    ["hadir", "izin", "sakit"].forEach(status => {
+        document.getElementById(status).textContent =
+            statistik.filter(p =>
+                p.status.toLowerCase() === status
+            ).length;
+    });
+}
+
+// Hapus presensi
+function hapusPresensi(id) {
+
+    if (!confirm("Hapus data presensi?")) return;
+
+    presensi = presensi.filter(p => p.id !== id);
+
+    simpanData();
+    tampilkanPresensi();
+}
+
+// Reset filter
+function resetFilter() {
+
+    document.getElementById("filterTanggal").value = "";
+
+    tampilkanPresensi();
+}
+
+// Download laporan
+function unduhCSV() {
+
+    let filter = document.getElementById("filterTanggal").value;
+
+    let data = presensi.filter(p =>
+        !filter || p.tanggal === filter
+    );
+
+    let csv = "Nama,Kelas,Tanggal,Status\n";
+
+    data.forEach(p => {
+
+        let s = siswa.find(x => x.id === p.idSiswa);
+        if (!s) return;
+
+        let aman = teks =>
+            '"' + String(teks).replace(/"/g, '""') + '"';
+
+        csv += [
+            s.nama, s.kelas, p.tanggal, p.status
+        ].map(aman).join(",") + "\n";
+    });
+
+    let blob = new Blob(["\uFEFF" + csv], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+
+    a.href = url;
+    a.download = "laporan-presensi.csv";
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+// Jalankan aplikasi
+
+tampilkanSiswa();
+tampilkanPresensi();
+
+</script>
+
+</body>
+</html>
